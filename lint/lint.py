@@ -679,6 +679,8 @@ def parse_args():
                         help="Output markdown")
     parser.add_argument("--css-mode", action="store_true",
                         help="Run CSS testsuite specific lints")
+    parser.add_argument("--whitelist-path", default=None,
+                        help="Optional path for lint.whitelist")
     return parser.parse_args()
 
 
@@ -695,14 +697,20 @@ def main(**kwargs):
     paths = list(kwargs.get("paths") if kwargs.get("paths") else all_filesystem_paths(repo_root))
     if output_format == "markdown":
         setup_logging(True)
-    return lint(repo_root, paths, output_format, kwargs.get("css_mode", False))
+
+    whitelist_path = kwargs.get("whitelist_path", None)
+
+    return lint(repo_root, paths, output_format, kwargs.get("css_mode", False), whitelist_path)
 
 
-def lint(repo_root, paths, output_format, css_mode):
+def lint(repo_root, paths, output_format, css_mode, whitelist_path=None):
     error_count = defaultdict(int)
     last = None
 
-    with open(os.path.join(repo_root, "lint.whitelist")) as f:
+    if not whitelist_path:
+        whitelist_path = os.path.join(repo_root, "lint.whitelist")
+
+    with open(whitelist_path) as f:
         whitelist, ignored_files = parse_whitelist(f)
 
     output_errors = {"json": output_errors_json,

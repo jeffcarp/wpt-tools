@@ -390,7 +390,7 @@ def test_main_with_args():
         sys.argv = ['./lint', 'a', 'b', 'c']
         with _mock_lint('lint', return_value=True) as m:
             lint_mod.main(**vars(parse_args()))
-            m.assert_called_once_with(repo_root, ['a', 'b', 'c'], "normal", False)
+            m.assert_called_once_with(repo_root, ['a', 'b', 'c'], "normal", False, None)
     finally:
         sys.argv = orig_argv
 
@@ -402,6 +402,16 @@ def test_main_no_args():
         with _mock_lint('lint', return_value=True) as m:
             with _mock_lint('all_filesystem_paths', return_value=['foo', 'bar']) as m2:
                 lint_mod.main(**vars(parse_args()))
-                m.assert_called_once_with(repo_root, ['foo', 'bar'], "normal", False)
+                m.assert_called_once_with(repo_root, ['foo', 'bar'], "normal", False, None)
+    finally:
+        sys.argv = orig_argv
+
+def test_whitelist_path_arg():
+    orig_argv = sys.argv
+    try:
+        sys.argv = ['./lint', 'a', '--whitelist-path', '~/custom/whitelist']
+        with _mock_lint('lint', return_value=True) as m:
+            lint_mod.main(**vars(parse_args()))
+            m.assert_called_once_with(repo_root, ['a'], "normal", False, '~/custom/whitelist')
     finally:
         sys.argv = orig_argv
